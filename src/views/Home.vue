@@ -238,7 +238,7 @@
         snippetTypes: ["shared", "personal"],
         tags: [],
         tagSearch: null,
-        isLoggedIn: true,
+        isLoggedIn: false,
 
         signUpForm: {
           name: null,
