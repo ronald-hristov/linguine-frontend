@@ -37,8 +37,8 @@
 
             <v-img height="250" src="../assets/img/code.jpg"></v-img>
             <v-card-title>{{snippet.title ? snippet.title : 'Snippet name'}}
-              <v-chip v-if="!snippet.hasOwnProperty('isLiked') || !snippet.isLiked" class="ma-2" color="orange"
-                      text-color="white">
+              <v-chip class="ma-2" color="orange"
+                      text-color="white" @click="likeSnippet(snippet)">
                 <v-icon v-if="snippet.isLiked" left>mdi-star</v-icon>
                 <v-icon v-if="!snippet.isLiked" left>mdi-star-outline</v-icon>
                 {{snippet.likes.users.length}}
@@ -49,7 +49,7 @@
             </v-card-text>
             <v-divider class="mx-4"></v-divider>
             <v-card-actions>
-              <v-btn color="deep-purple lighten-2" text @click="viewSnippet">View</v-btn>
+              <v-btn color="deep-purple lighten-2" text @click="viewSnippet(snippet)">View</v-btn>
               <v-subheader>by {{snippet.userId.name}}</v-subheader>
               <v-subheader>{{snippet.date | moment('MM.DD.YYYY h:mm:ss')}}</v-subheader>
             </v-card-actions>
@@ -254,7 +254,8 @@
       }
     },
     methods: {
-      viewSnippet() {
+      viewSnippet(snippet) {
+        this.currentSnippet = snippet;
         this.viewSnippetDialog = true;
       },
       signUpSubmit() {
@@ -278,11 +279,26 @@
             console.log(err)
         })
       },
+      loadSnippets() {
+        axios.get('/api/snippets')
+          .then(res => {
+            this.snippets = res.data;
+            if (this.snippets.length > 0) {
+              this. currentSnippet = this.snippets[0];
+            }
+          });
+      },
+      likeSnippet(snippet) {
+        axios.patch('/api/snippets/' + snippet._id + '/like')
+          .then(res => {
+            this.loadSnippets();
+          });
+      },
       createSnippetSubmit() {
         axios.post('/api/snippets', this.newSnippet)
           .then(res => {
+            this.loadSnippets();
             this.createSnippetDialog = false;
-            console.log(res.data);
           })
           .catch(err => {
             console.log(err)
@@ -293,13 +309,7 @@
       this.$emit('update:layout', LayoutHome)
     },
     mounted() {
-      axios.get('/api/snippets')
-        .then(res => {
-          this.snippets = res.data;
-          if (this.snippets.length > 1) {
-            this. currentSnippet = this.snippets[0];
-          }
-        });
+      this.loadSnippets();
       axios.get('/api/tags')
         .then(res => {
           let tags = [];
